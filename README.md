@@ -1,4 +1,4 @@
-# f4p-era5-analysis
+# FOREST-RESILIENCE Analysis
 
 Repository containing the code related to producing the climate and kndvi datasets for the resilience datasets as well as running the resilience-biodiversity analysis.
 The repository code and structure is a work in progress that will develop as the analysis progreses.
