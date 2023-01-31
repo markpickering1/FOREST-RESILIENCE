@@ -21,3 +21,5 @@ root_figures <- paste0(root_project, "figures/")
 # initialise working directory
 setwd(root_project)
 
+# set path of script to initialise plotting standards
+path_figures_init <- paste0(root_code, 'initialise_figs.R')

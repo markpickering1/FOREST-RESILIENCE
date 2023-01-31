@@ -9,7 +9,7 @@
 # Outputs	      : two dataframes
 # Options	      : 
 # Date          : 4/11/22
-# Version       : 1.2
+# Version       : 2 (26/01/23)
 # Authors       : Mark Pickering & Agata Elia
 # Maintainer    : Mark Pickering 
 # Notes		      : 
@@ -21,12 +21,7 @@
 ###################################################
 rm(list = ls())                                   # remove loaded objects
 
-source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST-RESILIENCE/initialise_R.R')
-
-# set date time and extract
-start_time <- Sys.time() ; print(start_time)      # initialise time
-full_date <- as.character(Sys.time()) ; full_date <- strsplit(full_date, " ")
-full_time <- full_date[[1]][2] ; full_date <- full_date[[1]][1]
+source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST-RESILIENCE/code/main/initialise_R.R')
 
 ######     GLOBAL VARS                        #####
 script_info <- 'createDF_kndviclim_fullTS'               # used in output name
@@ -73,17 +68,6 @@ output_path <- paste0(root_data_proce, script_info, '/', script_info, '_', full_
 print(paste0('output_path is : ', output_path ))
 if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # create directory if not present
 
-###################################################
-######     SET FUNCTIONS                      #####
-###################################################
-
-# date_to_col <- function(df, inc_year=TRUE, inc_month=TRUE){
-#   # function takes a dataframe with Z column a date and extracts the month and year component, inserting them as columns
-#   if(inc_year)df <- df %>% mutate(year = lubridate::year(Z))
-#   if(inc_month){ df <- df %>% mutate( month = lubridate::month(Z) ) }
-#   df$Z <- NULL 
-#   return(df)
-# }
 
 ###################################################
 ######       extract ncdfs - rast             #####
@@ -170,3 +154,16 @@ save(df_var, file=paste0(output_path, 'df_',v_variable_i, '_baseVar_full.RData' 
 # # convert r to dataframe, reset titles, convert to long format
 # df2_i_baseVar <- as.data.frame(r2_i_baseVar, xy = T, na.rm = T)
 # head(df2_i_baseVar)
+
+###################################################
+######     SET FUNCTIONS                      #####
+###################################################
+
+# date_to_col <- function(df, inc_year=TRUE, inc_month=TRUE){
+#   # function takes a dataframe with Z column a date and extracts the month and year component, inserting them as columns
+#   if(inc_year)df <- df %>% mutate(year = lubridate::year(Z))
+#   if(inc_month){ df <- df %>% mutate( month = lubridate::month(Z) ) }
+#   df$Z <- NULL 
+#   return(df)
+# }
+
