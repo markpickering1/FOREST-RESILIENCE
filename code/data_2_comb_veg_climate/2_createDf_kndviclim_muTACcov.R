@@ -145,7 +145,7 @@ for (i in 1:length(v_variables)){
 #           overwrite = F, recursive = FALSE, copy.mode = TRUE)
 load(paste0(input_dir, 'df_treecover_baseVar_full.RData'))
 df_stats <- df_var
-names(df_stats)[3] <- 'mu_var_treecover'
+names(df_stats)[3] <- 'mu_var'
 save(df_stats, file=paste0(input_dir, 'df_', 'treecover' , '_muTACcov.RData' )    )
 
 

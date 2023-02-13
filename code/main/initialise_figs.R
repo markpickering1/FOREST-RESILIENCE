@@ -30,16 +30,32 @@ n_bins <- 100
 ###################################################
 
 
-# set theme for figures
+# set theme for figures/maps
 basic_fig_theme <- theme( # set the 'theme' various aesthetic features
-  legend.position = "bottom",
+  plot.title = element_text(size=text_size, hjust = 0.5), # resize centre the plot title
+  text = element_text(size = text_size),
+
+    legend.position = "bottom",
   legend.background = element_rect(fill = "white"), # grey95 grey box around legend
   # legend.background = element_rect(colour = 'black', fill = 'white', linetype='solid')
   # element_rect = element_blank(),
-  text = element_text(size = text_size),
   panel.grid = element_line(color = "white"), # "transparent" set the colour of the grid lines
+  panel.background = element_blank() # set the colour of the panel behind the figure
+)
+
+basic_graph_theme <- theme( # set the 'theme' various aesthetic features
+  plot.title = element_text(size=text_size*2, hjust = 0.5), # resize centre the plot title
+  text = element_text(size = text_size*2),
+  # legend.position = "bottom",
+  legend.background = element_rect(fill = "white"), # grey95 grey box around legend
+  # legend.background = element_rect(colour = 'black', fill = 'white', linetype='solid')
+  # element_rect = element_blank(),
+
+  panel.grid = element_line(color = "grey95"), # "transparent" set the colour of the grid lines
   panel.background = element_blank(), # set the colour of the panel behind the figure
-  plot.title = element_text(size=text_size, hjust = 0.5) # resize centre the plot title
+  axis.line.x = element_line(color="black", size = 1),
+  axis.line.y = element_line(color="black", size = 1)
+  
 )
 
 ########### HISTOGRAMS ONLY #############

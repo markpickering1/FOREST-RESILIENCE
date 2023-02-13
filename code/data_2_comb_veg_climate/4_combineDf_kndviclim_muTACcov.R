@@ -29,6 +29,7 @@ input_script_date <- '2023-01-26'                        # the 0.05 production a
 ######     SET LIBRARIES                      #####
 # library(chron)   # useful for converting time values
 library(dplyr)   # use %>%
+library(stringr)
 # library(ncdf4)   # read ncdf
 # library(reshape) # reshaping dataframes
 # library(raster)  # package for raster manipulation
@@ -63,4 +64,31 @@ if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # cr
 #######################################
 ##### COMBINE DATAFRAMES          #####
 #######################################
+
+file_list <- list.files(path = input_dir, pattern = "*_muTACcov.RData")
+df_comb   <- data.frame()
+
+# Loop through the RData objects, load them, 
+#rename column names adding the variable as a prefix and join with kndvi RData object
+for (i in 1:length(file_list)){ # rdata_file <- 'df_t2m_muTACcov.RData'
+# for (i in 1:7){ # rdata_file <- 'df_t2m_muTACcov.RData'
+  rdata_file <- file_list[i]
+  var_name <- strsplit(rdata_file, "_") [[1]][2]
+  print(var_name)
+  
+  load(paste0(input_dir,  rdata_file) )
+  df_stats <- as.data.frame(df_stats)
+  colnames(df_stats)[3:length(df_stats)] <- paste0(gsub( '_var', '', colnames(df_stats)[3:length(df_stats)] ), '_', var_name)   # paste(colnames(df_stats)[3:length(df_stats)], var_name, sep="_")
+  df_stats[1:2] <- df_stats[1:2] %>% round( digits = 3)
+  
+  # create df or join to existing dfs
+  if(i == 1){df_comb <- df_stats
+  } else{ df_comb <- inner_join(df_comb, df_stats) }
+
+}
+
+
+# Save merged output - avoid overwriting
+if( ! file.exists(paste0(input_dir, "df_all.RData")) ){ save(df_comb, file=paste0(input_dir, "df_all.RData"))
+  } else{ save(df_comb, file=paste0(input_dir, "df_all_", sample(1:100, 1) ,".RData")) }
 
