@@ -9,10 +9,10 @@
 # 3) rescale kndvi values
 
 # 1) set working directories
-in_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged/"
-out_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10/"
 #in_dir=${ROOT_DATA_INPUT}/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged/
 #out_dir=${ROOT_DATA_INPUT}/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10/
+in_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged/"
+out_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10/"
 in_file="merged_kndvi_no_mask_2003_2021.nc"
 out_file="merged_kndvi_no_mask_2003_2021_rescaled10.nc"
 

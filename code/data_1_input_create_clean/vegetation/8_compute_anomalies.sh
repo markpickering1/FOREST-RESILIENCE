@@ -10,6 +10,9 @@
 # 4) subtract climatological average at each time-step to calculate anomalies
 
 # 1) set working directories
+#in_dir=${ROOT_DATA_INPUT}/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10/
+#out_ydaymean_dir=${ROOT_DATA_INPUT}/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10_ydaymean/
+#out_dir=${ROOT_DATA_INPUT}/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10_deseasonalised/
 in_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10/"
 out_ydaymean_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10_ydaymean/"
 out_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/vegetation/8day/KNDVI_no_mask/KNDVI_no_mask_nc_merged_rescaled10_deseasonalised/"
