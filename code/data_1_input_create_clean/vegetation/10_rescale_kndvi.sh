@@ -21,7 +21,7 @@ if [ ! -d ${out_dir} ]; then
   mkdir ${out_dir}
   fi
 
-# 2) rescale data
+# 3) rescale data
 cdo remapcon,${in_dir_grid}${in_grid} ${in_dir}${in_file} ${out_dir}${out_file}
 
 

@@ -66,28 +66,28 @@ cacl_tac <- function(df_i, df_dates_t1, var_name ){
   # function takes a df, df_i, with x,y pixels, and values of column var_name for each date
   # creates a copy of the index of these dates shifted by 1 index
   # calculates the autocorrelation of the var_name value shifted by 1 index
-  
+
   # take index of dates: clone and shift by one index
   names(df_dates_t1) <- c('date', 't_i')
   df_dates_t2 <- data.frame(v_dates, 2:(length(v_dates) + 1 ) )
-  names(df_dates_t2) <- c('date', 't_i') 
+  names(df_dates_t2) <- c('date', 't_i')
   # head(df_dates_t1) ; tail(df_dates_t1) ; head(df_dates_t2) ; tail(df_dates_t2)
-  
+
   # create two dfs of var_name with shifted index and values
   df_t1 <-  left_join(df_i, df_dates_t1)
   df_t2 <-  left_join(df_i, df_dates_t2)
-  names(df_t1)[4] <- paste0(var_name, '_t1') ; names(df_t2)[4] <- paste0(var_name, '_t2') 
+  names(df_t1)[4] <- paste0(var_name, '_t1') ; names(df_t2)[4] <- paste0(var_name, '_t2')
   df_t1$date <- NULL ; df_t2$date <- NULL
-  
+
   # join the shifted
   df_o <- full_join(df_t1, df_t2)
   df_o <- na.omit(df_o)
-  
+
   # calculate the 1-step lag
-  df_o <- df_o %>% dplyr::group_by( x, y ) %>% 
+  df_o <- df_o %>% dplyr::group_by( x, y ) %>%
     dplyr::summarise( tac_resid = cor( !!as.symbol(paste0(var_name, '_t1')) , !!as.symbol(paste0(var_name, '_t2') )) )
-  
-  return(df_o) 
+
+  return(df_o)
 }
 
 ###################################################
@@ -95,7 +95,7 @@ cacl_tac <- function(df_i, df_dates_t1, var_name ){
 ###################################################
 # take all the dates and label indices for t1 item and t2 (1-lag) item for calculating autocorrel
 load( paste0(input_dir, 'df_', 'kndvi_deseason' ,'_full.RData'  ) ) # head(df_var) ; # summary(df_var)
-v_dates <-  unique(df_var$date) 
+v_dates <-  unique(df_var$date)
 if(length(v_dates) != 874) {'Warning: check dates maybe something wrong'}
 df_dates_index_t1 <- data.frame(v_dates, 1:length(v_dates) )
 
@@ -111,42 +111,57 @@ rdata_files <- list.files(path=input_dir, pattern=paste0("*"), full.names=FALSE,
 for (i in 1:length(v_variables)){
 
   var_i <- v_variables[i] ; print(var_i)
-    
+
   # open df
   load( paste0(input_dir, 'df_', var_i, '_baseVar' ,'_full.RData'  ) )
-  # head(df_i) 
-  
+  # head(df_i)
+
   # group by and calculate count & mean
-  df_stats <- df_var %>% dplyr::group_by( x, y ) %>% 
+  df_stats <- df_var %>% dplyr::group_by( x, y ) %>%
     dplyr::summarise(
       n_var = n() ,
       mu_var  = mean( !!as.symbol(var_i), na.rm = T),
       sd_var  = sd( !!as.symbol(var_i), na.rm = T),
       cv_var  = raster::cv( !!as.symbol(var_i), na.rm = T),
       cv_calc_var = sd_var/mu_var *100    # calculate by hand - as seems a different result
-      ) 
+      )
   # dim(df_stats) ; summary(df_stats)
-  
+
   load( paste0(input_dir, 'df_', var_i, '_deseason' ,'_full.RData'  ) )
-  
+
   df_stats_tac <- cacl_tac(df_var, df_dates_index_t1, var_i)
-  
+
   df_stats <- full_join(df_stats, df_stats_tac)
   # head(df_stats) ; dim(df_stats) ; summary(df_stats)
-  
+
   # save individual dataframes and join to single dataframe
   save(df_stats, file=paste0(output_path, 'df_', var_i , '_muTACcov.RData' )    )
 
 } # end var loop
 
 
-# copy across the forest data - as format is already useable
-# file.copy(from=paste0(input_dir, 'df_treecover_baseVar_full.RData'), to=paste0(output_path, 'df_treecover_full.RData'), 
+# copy across the forest, socc and heterogeneity data - as format is already useable
+# file.copy(from=paste0(input_dir, 'df_treecover_baseVar_full.RData'), to=paste0(output_path, 'df_treecover_full.RData'),
 #           overwrite = F, recursive = FALSE, copy.mode = TRUE)
-load(paste0(input_dir, 'df_treecover_baseVar_full.RData'))
+load(paste0(input_dir, 'df_forestcover_baseVar_full.RData'))
 df_stats <- df_var
 names(df_stats)[3] <- 'mu_var'
-save(df_stats, file=paste0(input_dir, 'df_', 'treecover' , '_muTACcov.RData' )    )
+save(df_stats, file=paste0(output_path, 'df_', 'forestcover' , '_muTACcov.RData' )    )
+
+load(paste0(input_dir, 'df_socc30cm_baseVar_full.RData'))
+df_stats <- df_var
+names(df_stats)[3] <- 'mu_var'
+save(df_stats, file=paste0(output_path, 'df_', 'socc30cm' , '_muTACcov.RData' )    )
+
+load(paste0(input_dir, 'df_dissimilarity_baseVar_full.RData'))
+df_stats <- df_var
+names(df_stats)[3] <- 'mu_var'
+save(df_stats, file=paste0(output_path, 'df_', 'dissimilarity' , '_muTACcov.RData' )    )
+
+load(paste0(input_dir, 'df_diversity_baseVar_full.RData'))
+df_stats <- df_var
+# names(df_stats)[3] <- 'mu_var'
+save(df_stats, file=paste0(output_path, 'df_', 'diversity' , '_muTACcov.RData' )    )
 
 
 # # calculate the 1-lag tac

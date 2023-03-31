@@ -24,7 +24,9 @@ source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST
 ######     GLOBAL VARS                        #####
 script_info <- 'combDF_kndviclim_muTACcov'               # used in output name
 script_info_input <- 'createDF_kndviclim_muTACcov'       # input data dir 
-input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
+#input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
+#input_script_date <- '2023-03-05'                        # the 0.05 production with second kndvi version
+input_script_date <- '2023-03-14_diversity1st'           # the 0.05 production with second kndvi version and heterogeneity data
 
 ######     SET LIBRARIES                      #####
 # library(chron)   # useful for converting time values
@@ -87,6 +89,8 @@ for (i in 1:length(file_list)){ # rdata_file <- 'df_t2m_muTACcov.RData'
 
 }
 
+head(df_comb) 
+summary(df_comb)
 
 # Save merged output - avoid overwriting
 if( ! file.exists(paste0(input_dir, "df_all.RData")) ){ save(df_comb, file=paste0(input_dir, "df_all.RData"))

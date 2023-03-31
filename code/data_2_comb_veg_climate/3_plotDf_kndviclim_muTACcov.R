@@ -28,8 +28,9 @@ source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST
 script_info <- 'plotDF_kndviclim_muTACcov'               # used in output name
 script_info_input <- 'createDF_kndviclim_muTACcov'       # input data dir 
 # '2023-01-12' <- 0.05 version before git (theoretically same as one after)
-input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
-
+#input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
+#input_script_date <- '2023-03-05'                        # the 0.05 production with second kndvi version
+input_script_date <- '2023-03-14_diversity1st'                         # the 0.05 production with second kndvi version and heterogeneity data
 
 ######     SET LIBRARIES                      #####
 library(chron)   # useful for converting time values
@@ -50,6 +51,7 @@ library(lattice)  # for making multi-gird plots and tables
 library(rgdal)        # 
 library(RColorBrewer) # colour palettes
 library(sf)           # utilise shapefiles etc
+library(cowplot)      # for ggdraw
 
 ###################################################
 ######       SET THEME COMMON PLOTTING VARS   #####
@@ -75,34 +77,7 @@ if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # cr
 ##### FUNCTIONS                   #####
 #######################################
 
-
-make_hist <- function(df_in, stat_in, stat_in_full){
-  h_dist <- ggplot(df_in, aes_string(x = stat_in )) +
-    geom_histogram( bins = n_bins, colour = "black", fill='black') + #  # ..density.. breaks = seq(-1, 1, by = 10), aes_string(y =rescaled_hist_density, colour = cat_a)
-    labs( y= paste0( 'Frequency'), 
-          x= paste0(  stat_in_full    ) ) + 
-    theme_classic() +
-    scale_x_continuous(limits = l_all[[j]][[1]][[i]] ) + # print the jth statistic of the ith variable
-    basic_hist_theme          
-  return(h_dist)
-}
-
-make_map <- function(df_in, stat_in, stat_in_full){
-  g_input <-  ggplot() +
-    geom_tile(data = df_in, aes_string(x = 'x', y = 'y', fill = stat_in)) + # add the raster data
-    geom_sf(data = land_shapefile) + # , color = 'black', size =2) + # add the shapefile (place the base layer first)
-    labs( x='', y='', # x= 'latitude', y = 'longitude', 
-          fill = paste0( stat_in_full ),  title = paste0( var_i_full) ) + #, '_', gsub('_',' ', stat_j) ) ) + # label axes and title
-    coord_sf() + # align the coordinates to those of shapefile?
-    # coord_equal() + # different crs
-    # discrete_fill_viridis_c() + # alternative colour system
-    scale_fill_distiller(limits= l_all[[j]][[2]][[i]] , palette =  'Spectral', na.value = "white", oob=scales::squish) + # set the colour scheme and palette # direction = 1,
-    # scale_fill_distiller(limits=c(-1, 1), palette =  'YlGn', direction = 1,    
-    #                      trans = "log",  breaks = scales::trans_breaks('log10', function(x) round(10 ^ x, digits=1), n=3)    ) + # , guide = guide_colorbar(frame.colour = "black")
-    # theme_void() +
-    basic_fig_theme  
-  return(g_input)
-}
+# see initialise_figs.R
 
 
 
@@ -115,20 +90,50 @@ make_map <- function(df_in, stat_in, stat_in_full){
 # load( paste0(input_dir, 'df_kndvi_muTACcov.RData'))
 # head(df_stats) ; dim(df_stats) ; summary(df_stats)
 
-v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'treecover')
-v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'tree cover')
-v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
-v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+# v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'treecover')
+# v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'tree cover')
+# v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
+# v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
 # set limits for each var in hist and map - each column is the limits for the corresponding variable
 #                     kndvi           t2m           VPD         SPEI            SSR             SM          TP          treecov
-l_mu_hist  <- list( c(0, 6000 )   , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-5,100) )
-l_mu_map   <- list( c(2000, 4000 ), c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 60)  ) 
-l_sd_hist  <- list( c(0, 2500 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)      ) 
-l_sd_map   <- list( c(0, 2000 )   , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3)    )
-l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300)    )
-l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150)   )
-l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3) )
-l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2)   )
+# l_mu_hist  <- list( c(0, 6000 )   , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-5,100) )
+# l_mu_map   <- list( c(0, 4000 ), c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 60)  ) 
+# l_sd_hist  <- list( c(0, 2500 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)      ) 
+# l_sd_map   <- list( c(0, 2000 )   , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3)    )
+# l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300)    )
+# l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150)   )
+# l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3) )
+# l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2)   )
+
+# v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'forestcover', 'socc30cm')
+# v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'forest cover %', 'soil organic carbon content 30cm [g/kg]')
+# v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
+# v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+# # set limits for each var in hist and map - each column is the limits for the corresponding variable # new limits with rescaled kndvi
+# #                     kndvi           t2m           VPD         SPEI            SSR             SM          TP          forestcov      socc30cm
+# l_mu_hist  <- list( c(0, 0.6 )   , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-0.05,1),      c(0, 5)      )
+# l_mu_map   <- list( c(0.2, 0.4 ), c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 1),       c(0, 5)      )             
+# l_sd_hist  <- list( c(0, 0.25 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)) 
+# l_sd_map   <- list( c(0, 0.2 )   , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3))
+# l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300))
+# l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150))
+# l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
+# l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2))
+
+v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'forestcover', 'socc30cm', 'dissimilarity')
+v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'forest cover %', 'soil organic carbon content 30cm [g/kg]', 'earthenv dissimilarity')
+v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
+v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+# set limits for each var in hist and map - each column is the limits for the corresponding variable # new limits with rescaled kndvi
+#                     kndvi           t2m           VPD         SPEI            SSR             SM          TP          forestcov      socc30cm     dissimilarity
+l_mu_hist  <- list( c(0, 0.6 )    , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-0.05,1) ,     c(0, 5) ,      c(0, 8))
+l_mu_map   <- list( c(0.2, 0.4 )  , c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 1)    ,     c(0, 3) ,      c(1, 5))             
+l_sd_hist  <- list( c(0, 0.25 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)) 
+l_sd_map   <- list( c(0, 0.2 )    , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3))
+l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300))
+l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150))
+l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
+l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2))
 
 l_all <- list( list(l_mu_hist, l_mu_map), list(l_sd_hist, l_sd_map), list(l_cv_hist, l_cv_map), list(l_tac_hist, l_tac_map) )
 
@@ -151,11 +156,16 @@ for (i in 1:length(v_variables)){
     stat_j <- v_stats[j] ; print(stat_j)
     stat_j_full <- v_stats_full[j]
     
-    h_dist <- make_hist(df_stats, stat_j, stat_j_full)
+    
+    # make histogram
+    lims_h_i <- l_all[[j]][[1]][[i]]
+    h_dist <- make_hist(df_stats, stat_j, stat_j_full, lims_h_i)
     # h_dist
     # ggsave(plot = h_dist, filename = paste0(output_path, 'h_', var_i ,'_', stat_j, '.png' ) ) # , width = wid, height = hei)
     
-    g_input <- make_map(df_stats, stat_j, stat_j_full)
+    # make map
+    lims_m_i <- l_all[[j]][[2]][[i]]
+    g_input <- make_map(df_stats, stat_j, stat_j_full, lims_m_i)
     
     # save map
     ggsave(plot = g_input, filename = paste0(output_path, 'g_', var_i ,'_', stat_j, '.png' ) ) # , width = wid, height = hei)
@@ -164,11 +174,13 @@ for (i in 1:length(v_variables)){
     # adjust the positioning to make sure figures fit
     g_draw <- ggdraw( clip = 'off') +
       # draw_plot(g_input, x = 0, y = 0.4, width = 0.6, height = 0.6) +
-      draw_plot(g_input, x = 0, y = 0.23, width = 0.82, height = 0.82, hjust = 0.3) +
-      draw_plot(h_dist , x = 0, y = 0,    width = 0.345, height = 0.24, hjust = 0 ) 
+      # draw_plot(g_input, x = 0, y = 0.23, width = 0.82, height = 0.82, hjust = 0.3) +
+      # draw_plot(h_dist , x = 0, y = 0,    width = 0.345, height = 0.24, hjust = 0 )
+      draw_plot(g_input, x = 0.23, y = 0.23, width = 0.77, height = 0.77, hjust = 0.3) +
+      draw_plot(h_dist , x = 0, y = 0,    width = 0.77, height = 0.24, hjust = 0 ) 
     # g_draw
     
-    ggsave(plot = g_draw, filename = paste0(output_path, 'g_comb_', var_i ,'_', stat_j, '.png' ) ) # , width = wid, height = hei)
+    ggsave(plot = g_draw, filename = paste0(output_path, 'g_comb_', var_i ,'_', stat_j, '.png' ) , width = 8, height =10 ) # , width = wid, height = hei)
     
     } # end stat loop
 
