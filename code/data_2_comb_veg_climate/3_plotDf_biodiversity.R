@@ -31,7 +31,8 @@ script_info_input <- 'createDF_kndviclim_muTACcov'       # input data dir
 # '2023-01-12' <- 0.05 version before git (theoretically same as one after)
 #input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
 #input_script_date <- '2023-03-05'                        # the 0.05 production with second kndvi version
-input_script_date <- '2023-03-14_diversity1st'                         # the 0.05 production with second kndvi version and heterogeneity data
+# input_script_date <- '2023-03-14_diversity1st'                         # the 0.05 production with second kndvi version and heterogeneity data
+input_script_date <- '2023-04-17'                         # EGU
 
 ######     SET LIBRARIES                      #####
 library(chron)   # useful for converting time values
@@ -87,8 +88,8 @@ if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # cr
 # set the hist and map min/max
 # probably better to set as universal values rather than dynamically coding them
 
+# print Marco diversity metrics
 load( paste0(input_dir, 'df_diversity_muTACcov.RData'  ) )
-
 # head(df_stats) ; dim(df_stats) ; summary(df_stats) ; hist(df_stats$fhd_avg)
 v_variables      <- c('skew_avg'        ,  'kurt_avg'        ,   'rh50_avg'  , 'fhd_avg'                     , 'rh98_avg'    , 'skew_cv'    , 'kurt_cv'    , 'rh50_cv'  , 'fhd_cv')
 v_variables_full <- c('average skewness',  'average kurtosis', 'average RH50', 'avg foliage height diversity', 'average RH98', 'CV skewness', 'CV kurtosis', 'CV RH50'  , 'CV foliage height diversity')
@@ -97,16 +98,26 @@ v_variables_full <- c('average skewness',  'average kurtosis', 'average RH50', '
 #                     skew_avg      kurt_avg     rh50_avg     fhd_avg     rh98_avg     skew_cv        kurt_cv          rh50_cv      fhd_cv  
 l_mu_hist  <- list( c(-2.5, 2.5 ) , c(-2, 2)  , c(0, 20)   , c(0, 4)     , c(0, 1)   , c(-5, 5)     , c(-4,4)     , c(0, 2)   ,     c(0, 0.4) )
 l_mu_map   <- list( c(-0.8, 0.8 ) , c(-1, 1)  , c(0, 15)   , c(2.2, 3.2) , c(0, 0.5) , c(-2.5, 2.5) , c(-3,1)     , c(0, 1.5) ,     c(0, 0.2) )             
-
 l_all <- list(l_mu_hist, l_mu_map) 
 
+# print dissimilarity metrics
+load( paste0(input_dir, 'df_glcmdiversity_muTACcov.RData'  ) )
+# head(df_stats) ; dim(df_stats) ; summary(df_stats) ; hist(df_stats$fhd_avg)
+v_variables      <- c('EVI_dissimilarity' ,  'EVI_homogeneity' ,   'biomass_dissimilarity'  , 'biomass_homogeneity', 'kndvi_dissimilarity', 'kndvi_homogeneity' )
+v_variables_full <- c('EVI dissimilarity' ,  'EVI homogeneity' ,   'biomass dissimilarity'  , 'biomass homogeneity', 'kndvi dissimilarity', 'kndvi homogeneity')
+# v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid') # v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+# set limits for each var in hist and map - each column is the limits for the corresponding variable # new limits with rescaled kndvi
+#               EVI_dissimila      EVI_homog     biom_dissimila     biom_hom     kndvi_dissimilarity   kndvi_homog
+l_mu_hist  <- list( c(0, 12 )   ,   c(0, 1)    , c(0, 10)   , c(0, 1)        , c(0, 17)   , c(0, 1))
+l_mu_map   <- list( c(1, 5 )    ,   c(0, 0.7)  , c(0, 5)    , c(0, 0.7)      , c(0, 8)    , c(0, 1))             
+l_all <- list(l_mu_hist, l_mu_map) 
 
 #######################################
 ##### CREATE FIGURES              #####
 #######################################
 # this loops over the variables listed above and plots each of the variables as map and histogram
 
-for (i in 1:length(v_variables)){
+for (i in 5:length(v_variables)){
   var_i <- v_variables[i] ; print(var_i)
   var_i_full <- v_variables_full[i] 
   # head(ls()[ls()=='df_i'])
@@ -120,8 +131,8 @@ for (i in 1:length(v_variables)){
     # ggsave(plot = h_dist, filename = paste0(output_path, 'h_', var_i ,'_', stat_j, '.png' ) ) # , width = wid, height = hei)
     
     lims_m_i <- l_all[[2]][[i]]
-    g_input <- make_map(df_stats, var_i, var_i_full, lims_m_i)
-    
+    g_input <- make_map(df_stats, var_i, var_i_full, var_i_full, lims_m_i)
+
     # save map
     ggsave(plot = g_input, filename = paste0(output_path, 'g_diversity_', var_i ,'_', '.png' ) ) # , width = wid, height = hei)
     

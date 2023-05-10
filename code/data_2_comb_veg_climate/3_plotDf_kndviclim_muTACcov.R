@@ -31,6 +31,7 @@ script_info_input <- 'createDF_kndviclim_muTACcov'       # input data dir
 #input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
 #input_script_date <- '2023-03-05'                        # the 0.05 production with second kndvi version
 input_script_date <- '2023-03-14_diversity1st'                         # the 0.05 production with second kndvi version and heterogeneity data
+input_script_date <- '2023-04-17'                         # EGU run
 
 ######     SET LIBRARIES                      #####
 library(chron)   # useful for converting time values
@@ -120,33 +121,55 @@ if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # cr
 # l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
 # l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2))
 
-v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'forestcover', 'socc30cm', 'dissimilarity')
+# # diversity production
+# v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'forestcover', 'socc30cm', 'dissimilarity')
+# v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'forest cover %', 'soil organic carbon content 30cm [g/kg]', 'earthenv dissimilarity')
+# v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
+# v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+# # set limits for each var in hist and map - each column is the limits for the corresponding variable # new limits with rescaled kndvi
+# #                     kndvi           t2m           VPD         SPEI            SSR             SM          TP          forestcov      socc30cm     dissimilarity
+# l_mu_hist  <- list( c(0, 0.6 )    , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-0.05,1) ,     c(0, 5) ,      c(0, 8))
+# l_mu_map   <- list( c(0.2, 0.4 )  , c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 1)    ,     c(0, 3) ,      c(1, 5))             
+# l_sd_hist  <- list( c(0, 0.25 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)) 
+# l_sd_map   <- list( c(0, 0.2 )    , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3))
+# l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300))
+# l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150))
+# l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
+# l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2))
+# 
+# l_all <- list( list(l_mu_hist, l_mu_map), list(l_sd_hist, l_sd_map), list(l_cv_hist, l_cv_map), list(l_tac_hist, l_tac_map) )
+
+# EGU production (no SPEI SWVL1, skip sd )
+v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp' , 'forestcover', 'socc30cm', 'dissimilarity', )
 v_variables_full <- c('kndvi', '2m temperature', 'VPD', 'SPEI', 'net solar radiation', 'soil moisture', 'total precipitation', 'forest cover %', 'soil organic carbon content 30cm [g/kg]', 'earthenv dissimilarity')
-v_stats <- c('mu_var', 'sd_var', 'cv_var', 'tac_resid')
-v_stats_full <- c('mean', 'std. dev.', 'CoV', 'residual TAC')
+v_stats <- c('mu_var',  'cv_var', 'tac_resid') # 'sd_var',
+v_stats_full <- c('mean',  'CoV', 'residual TAC') # 'std. dev.',
 # set limits for each var in hist and map - each column is the limits for the corresponding variable # new limits with rescaled kndvi
 #                     kndvi           t2m           VPD         SPEI            SSR             SM          TP          forestcov      socc30cm     dissimilarity
-l_mu_hist  <- list( c(0, 0.6 )    , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 12000000) , c(0, 1)   , c(0,1)     , c(-0.05,1) ,     c(0, 5) ,      c(0, 8))
-l_mu_map   <- list( c(0.2, 0.4 )  , c(270, 290), c(0, 0.8) , c(-0.02, 0.02), c(0, 10000000) , c(0, 0.4) , c(0,0.3)   , c(0, 1)    ,     c(0, 3) ,      c(1, 5))             
-l_sd_hist  <- list( c(0, 0.25 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5500000 ) , c(0, 0.2) , c(0,1)) 
-l_sd_map   <- list( c(0, 0.2 )    , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4000000 ) , c(0, 0.1) , c(0,0.3))
-l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)      , c(0, 200) , c(0,300))
-l_cv_map   <- list( c(0, 60 )     , c(0, 4)    , c(0, 100) , c(115,125)    , c(0, 100)      , c(0, 40)  , c(0, 150))
-l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
-l_tac_map  <- list( c(0, 0.6 )    , c(0, 0.6)  , c(0, 0.6) , c(0.7, 0.9)   , c(0, 0.4)      , c(0, 0.8) , c(0, 0.2))
+l_mu_hist  <- list( c(0, 0.6 )    , c(250, 300), c(0, 3)   , c(-0.05, 0.05), c(0, 1.2e+07) , c(0, 1)   , c(0,1)     , c(-0.05,1) ,     c(0, 5) ,      c(0, 8))
+l_mu_map   <- list( c(0.3, 0.5 )  , c(280, 295), c(0, 1)   , c(-0.02, 0.02),c(5e+06,1e+07) , c(0, 0.4) , c(0.1,0.4) , c(0, 1)    ,     c(0, 3) ,      c(1, 5))             
+l_sd_hist  <- list( c(0, 0.25 )   , c(0, 14)   , c(0, 2.5) , c(0, 1)       , c(0, 5.55e+06), c(0, 0.2) , c(0,1)) 
+l_sd_map   <- list( c(0, 0.2 )    , c(0, 10)   , c(0, 0.6) , c(0.9, 1.0)   , c(0, 4e+06 )  , c(0, 0.1) , c(0,0.3))
+l_cv_hist  <- list( c(0, 150 )    , c(0, 5)    , c(0, 120) , c(0, 140)     , c(0, 120)     , c(0, 200) , c(0,200))
+l_cv_map   <- list( c(0, 60 )     , c(1, 2)    , c(30, 70) , c(115,125)    , c(20, 55)     , c(0, 40)  , c(60, 120))
+# l_tac_hist <- list( c(-0.1, 1 )   , c(0, 0.6)  , c(0, 0.8) , c(0, 1)       , c(0, 0.6)      , c(0, 1)   , c(-0.1,0.3))
+l_tac_hist <- list( c(-0.1, 1 )   , c(-0.1, 1 ), c(-0.1, 1 ) , c(-0.1, 1 ) ,  c(-0.1, 1 )  , c(-0.1, 1), c(-0.1, 1 ) )
+l_tac_map  <- list( c(0, 0.6 )    , c(0.2, 0.5)  , c(0.2,0.6), c(0.7, 0.9) , c(0, 0.4)     , c(0, 0.8) , c(0, 0.2))
 
-l_all <- list( list(l_mu_hist, l_mu_map), list(l_sd_hist, l_sd_map), list(l_cv_hist, l_cv_map), list(l_tac_hist, l_tac_map) )
+l_all <- list( list(l_mu_hist, l_mu_map), list(l_cv_hist, l_cv_map),  list(l_tac_hist, l_tac_map) ) # list(l_sd_hist, l_sd_map),
 
 
 #######################################
 ##### CREATE FIGURES              #####
 #######################################
 # this loops over the variables listed above and plots each of the variables as map and histogram
+print('plotting')
 
 for (i in 1:length(v_variables)){
   var_i <- v_variables[i] ; print(var_i)
   var_i_full <- v_variables_full[i] 
   # head(ls()[ls()=='df_i'])
+  if(var_i == 'spei' | var_i == 'swvl1' ) next; #  | var_i == 'ssr'
   
   # load( paste0(input_dir, 'df_', file_i_type ,'_full.RData'  ) )
   load( paste0(input_dir, 'df_', var_i, '_muTACcov.RData'  ) )
@@ -165,7 +188,7 @@ for (i in 1:length(v_variables)){
     
     # make map
     lims_m_i <- l_all[[j]][[2]][[i]]
-    g_input <- make_map(df_stats, stat_j, stat_j_full, lims_m_i)
+    g_input <- make_map(df_stats, stat_j, stat_j_full, var_i_full, lims_m_i)
     
     # save map
     ggsave(plot = g_input, filename = paste0(output_path, 'g_', var_i ,'_', stat_j, '.png' ) ) # , width = wid, height = hei)

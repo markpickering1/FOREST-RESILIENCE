@@ -24,9 +24,7 @@ source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST
 
 ######     GLOBAL VARS                        #####
 script_info      <- 'createDF_kndviclim_muTACcov'               # used in output name
-# script_info_input <- 'createDF_kndviclim_fullTS'                 # load input dataframes containing full data and residuals
-script_info_input <- '/eos/jeodpp/data/projects/FOREST-RESILIENCE/data_processing/createDF_kndviclim_phenology/createDF_kndviclim_phenology_2023-04-15/'
-script_info_temp <- '/eos/jeodpp/data/projects/FOREST-RESILIENCE/data_processing/createDF_kndviclim_fullTS/createDF_kndviclim_fullTS_2023-04-18/'
+script_info_input <- 'createDF_kndviclim_fullTS'                 # load input dataframes containing full data and residuals
 
 ######     SET LIBRARIES                      #####
 library(chron)   # useful for converting time values
@@ -53,8 +51,7 @@ library(sf)           # utilise shapefiles etc
 
 # initialise input file
 # input_dir <- 'data_processing/createDF_kndviclim/createDF_kndviclim_2023-01-11/'
-# input_dir <- paste0(root_data_proce, script_info_input, '/', script_info_input, '_', full_date,  '/')
-input_dir   <- script_info_input
+input_dir <- paste0(root_data_proce, script_info_input, '/', script_info_input, '_', full_date,  '/')
 
 # initialise output
 output_path <- paste0(root_data_proce, script_info, '/', script_info, '_', full_date,  '/')
@@ -97,26 +94,18 @@ cacl_tac <- function(df_i, df_dates_t1, var_name ){
 ######     EXTRACT DATE INDEX                 #####
 ###################################################
 # take all the dates and label indices for t1 item and t2 (1-lag) item for calculating autocorrel
-
-# load( paste0(input_dir, 'df_', 'kndvi_deseason' ,'_full.RData'  ) ) # head(df_var) ; # summary(df_var)
-
-load( paste0(input_dir, 'df_kndvi_deseason_full_gs_masked_detrended.RData'  ) ) # head(df_var) ; # summary(df_var)
-df_detrend <- df_detrend[,c("x","y","date","detrended")] ; df_detrend <- na.omit(df_detrend) ; head(df_detrend) # select only relevant columns
-df_var <- as.data.frame(df_detrend) ; rm(df_detrend)
-
-# select all the unique timestamps to be considered in the analysis
+load( paste0(input_dir, 'df_', 'kndvi_deseason' ,'_full.RData'  ) ) # head(df_var) ; # summary(df_var)
 v_dates <-  unique(df_var$date)
 if(length(v_dates) != 874) {'Warning: check dates maybe something wrong'}
 df_dates_index_t1 <- data.frame(v_dates, 1:length(v_dates) )
-rm(df_var)
 
 ###################################################
 ######       extract statistics               #####
 ###################################################
 # extract background mean, CoV and residual TAC for the different variabes.
 
-v_variables <- c(  'kndvi', 't2m', 'VPD',  'ssr', 'tp') # 'spei',  'swvl1',
-# rdata_files <- list.files(path=input_dir, pattern=paste0("*"), full.names=FALSE, recursive=FALSE) # view all files
+v_variables <- c('kndvi', 't2m', 'VPD', 'spei', 'ssr', 'swvl1', 'tp')
+rdata_files <- list.files(path=input_dir, pattern=paste0("*"), full.names=FALSE, recursive=FALSE) # view all files
 
 
 for (i in 1:length(v_variables)){
@@ -124,36 +113,22 @@ for (i in 1:length(v_variables)){
   var_i <- v_variables[i] ; print(var_i)
 
   # open df
-  # load( paste0(input_dir, 'df_', var_i, '_baseVar' ,'_full.RData'  ) )
-  load( paste0(input_dir, 'df_', var_i, '_baseVar_full_gs_masked.RData'  ) ) # detrended
+  load( paste0(input_dir, 'df_', var_i, '_baseVar' ,'_full.RData'  ) )
   # head(df_i)
-  
-  # clean
-  dim(df_var)
-  df_var <- df_var[,c("x","y","date","var_gs")] ; df_var <- na.omit(df_var) ; dim(df_var) # select only relevant columns
-  names(df_var)[4] <- var_i
 
   # group by and calculate count & mean
   df_stats <- df_var %>% dplyr::group_by( x, y ) %>%
     dplyr::summarise(
       n_var = n() ,
       mu_var  = mean( !!as.symbol(var_i), na.rm = T),
-      # sd_var  = sd( !!as.symbol(var_i), na.rm = T),
+      sd_var  = sd( !!as.symbol(var_i), na.rm = T),
       cv_var  = raster::cv( !!as.symbol(var_i), na.rm = T),
-      # cv_calc_var = sd_var/mu_var *100    # calculate by hand - as seems a different result
+      cv_calc_var = sd_var/mu_var *100    # calculate by hand - as seems a different result
       )
-  # dim(df_stats) ; summary(df_stats) ; head(df_stats)  
-  rm(df_var)
-  
-  # load( paste0(input_dir, 'df_', var_i, '_deseason' ,'_full.RData'  ) ) # original
-  load( paste0(input_dir, 'df_', var_i, '_deseason_full_gs_masked_detrended.RData'  ) )  # detrended
-  
-  # clean - tbc
-  dim(df_detrend)
-  df_detrend <- df_detrend[,c("x","y","date","detrended")] ; df_detrend <- na.omit(df_detrend) ; # head(df_detrend) # select only relevant columns
-  names(df_detrend)[4] <- var_i
-  df_var <- as.data.frame(df_detrend) ; rm(df_detrend)
-  
+  # dim(df_stats) ; summary(df_stats)
+
+  load( paste0(input_dir, 'df_', var_i, '_deseason' ,'_full.RData'  ) )
+
   df_stats_tac <- cacl_tac(df_var, df_dates_index_t1, var_i)
 
   df_stats <- full_join(df_stats, df_stats_tac)
@@ -168,48 +143,25 @@ for (i in 1:length(v_variables)){
 # copy across the forest, socc and heterogeneity data - as format is already useable
 # file.copy(from=paste0(input_dir, 'df_treecover_baseVar_full.RData'), to=paste0(output_path, 'df_treecover_full.RData'),
 #           overwrite = F, recursive = FALSE, copy.mode = TRUE)
-load(paste0(input_dir, 'df_forestcover_baseVar_full_gs_masked.RData'))
+load(paste0(input_dir, 'df_forestcover_baseVar_full.RData'))
 df_stats <- df_var
 names(df_stats)[3] <- 'mu_var'
 save(df_stats, file=paste0(output_path, 'df_', 'forestcover' , '_muTACcov.RData' )    )
 
-load(paste0(input_dir, 'df_socc30cm_baseVar_full_gs_masked.RData'))
+load(paste0(input_dir, 'df_socc30cm_baseVar_full.RData'))
 df_stats <- df_var
 names(df_stats)[3] <- 'mu_var'
 save(df_stats, file=paste0(output_path, 'df_', 'socc30cm' , '_muTACcov.RData' )    )
 
-load(paste0(input_dir, 'df_diversity_baseVar_full_gs_masked.RData'))
+load(paste0(input_dir, 'df_dissimilarity_baseVar_full.RData'))
+df_stats <- df_var
+names(df_stats)[3] <- 'mu_var'
+save(df_stats, file=paste0(output_path, 'df_', 'dissimilarity' , '_muTACcov.RData' )    )
+
+load(paste0(input_dir, 'df_diversity_baseVar_full.RData'))
 df_stats <- df_var
 # names(df_stats)[3] <- 'mu_var'
 save(df_stats, file=paste0(output_path, 'df_', 'diversity' , '_muTACcov.RData' )    )
-
-# merge different diversity metrics from glcm metrics EVI and biomass
-load(paste0(input_dir, 'df_dissimilarity_baseVar_full_gs_masked.RData'))
-names(df_var)[3] <- 'EVI_dissimilarity'
-df_stats <- df_var
-
-load(paste0(script_info_temp, 'df_EVI_homogeneity_baseVar_full.RData'))
-names(df_var)[3] <- 'EVI_homogeneity'
-df_stats <- full_join(df_stats, df_var) ; # df_stats_test <- left_join(df_stats, df_var)
-
-load(paste0(script_info_temp, 'df_biomass_baseVar_full.RData'))
-# names(df_var)[3] <- 'mu_EVI_homogeneity'
-names(df_var)[3:length(names(df_var))] <- paste0( names(df_var)[3:length(names(df_var))] )
-df_stats <- full_join(df_stats, df_var) ; # df_stats_test <- left_join(df_stats, df_var)
-
-load(paste0(script_info_temp, 'df_kndvi_diversity_baseVar_full.RData'))
-# names(df_var)[3] <- 'mu_EVI_homogeneity'
-names(df_var)[3:length(names(df_var))] <- gsub('glcm', '', paste0('kndvi', names(df_var)[3:length(names(df_var))] ) )
-df_stats <- full_join(df_stats, df_var) ; # df_stats_test <- left_join(df_stats, df_var)
-
-save(df_stats, file=paste0(output_path, 'df_', 'glcmdiversity' , '_muTACcov.RData' )    )
-
-# old dissimilarity only
-# load(paste0(input_dir, 'df_dissimilarity_baseVar_full_gs_masked.RData'))
-# df_stats <- df_var
-# names(df_stats)[3] <- 'mu_var'
-# save(df_stats, file=paste0(output_path, 'df_', 'dissimilarity' , '_muTACcov.RData' )    )
-
 
 
 # # calculate the 1-lag tac

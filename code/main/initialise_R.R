@@ -17,11 +17,11 @@ root_project <- "/eos/jeodpp/data/projects/FOREST-RESILIENCE/"
 # dir of input data
 root_data_input <- paste0(root_project, "data/")
 # dir of intermediate data
-root_data_proce <- paste0(root_project, "data_processing/")
+root_data_proce <- paste0(root_project, "data_processing/version_1_preEGU/")
 # dir of git
 root_git <- paste0(root_project, "GIT-FOREST-RESILIENCE/FOREST-RESILIENCE/")
 # dir of output figures
-root_figures <- paste0(root_project, "figures/")
+root_figures <- paste0(root_project, "figures/version_1_preEGU/")
 # dir of main/master code
 root_main <-  paste0(root_git, "code/main/")
 

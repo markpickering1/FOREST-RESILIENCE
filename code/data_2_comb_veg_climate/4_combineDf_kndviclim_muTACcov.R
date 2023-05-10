@@ -26,7 +26,8 @@ script_info <- 'combDF_kndviclim_muTACcov'               # used in output name
 script_info_input <- 'createDF_kndviclim_muTACcov'       # input data dir 
 #input_script_date <- '2023-01-26'                        # the 0.05 production after creating the GIT (first kndvi version)
 #input_script_date <- '2023-03-05'                        # the 0.05 production with second kndvi version
-input_script_date <- '2023-03-14_diversity1st'           # the 0.05 production with second kndvi version and heterogeneity data
+# input_script_date <- '2023-03-14_diversity1st'           # the 0.05 production with second kndvi version and heterogeneity data
+input_script_date <- '2023-04-17'                          # EGU production new diversity metrics
 
 ######     SET LIBRARIES                      #####
 # library(chron)   # useful for converting time values
@@ -61,7 +62,7 @@ input_dir <- paste0(root_data_proce, script_info_input, '/', script_info_input, 
 # set/create output directory  - use same as before
 output_path <- input_dir
 print(paste0('output_path is : ', output_path ))
-if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T)} # create directory if not present
+if(! dir.exists(output_path)) {dir.create(paste0(output_path),recursive=T) ; print('created')} # create directory if not present
 
 #######################################
 ##### COMBINE DATAFRAMES          #####
@@ -81,18 +82,33 @@ for (i in 1:length(file_list)){ # rdata_file <- 'df_t2m_muTACcov.RData'
   load(paste0(input_dir,  rdata_file) )
   df_stats <- as.data.frame(df_stats)
   colnames(df_stats)[3:length(df_stats)] <- paste0(gsub( '_var', '', colnames(df_stats)[3:length(df_stats)] ), '_', var_name)   # paste(colnames(df_stats)[3:length(df_stats)], var_name, sep="_")
-  df_stats[1:2] <- df_stats[1:2] %>% round( digits = 3)
+  df_stats[1:2] <- df_stats[1:2] %>% round( digits = 3) # this only works for 0.05deg check rounding
+  
+  # remove those with zero forest cover (as this is full of NAs and unneccessarily inflates dfs)
+  if (rdata_file == 'df_forestcover_muTACcov.RData') { 
+    print('remove 0 values')
+    df_stats[3][df_stats[3] == 0] <- NA
+    df_stats <- na.omit(df_stats)
+  }
   
   # create df or join to existing dfs
   if(i == 1){df_comb <- df_stats
-  } else{ df_comb <- inner_join(df_comb, df_stats) }
+  } else{ 
+    df_comb <- full_join(df_comb, df_stats) 
+    # df_comb <- inner_join(df_comb, df_stats)
+    }
 
 }
 
+# remove points with missing tac_kndvi variable as this is predictor
+df_comb <- df_comb %>% filter(! is.na(tac_resid_kndvi))
+
 head(df_comb) 
 summary(df_comb)
+# dim(df_comb)
+
 
 # Save merged output - avoid overwriting
 if( ! file.exists(paste0(input_dir, "df_all.RData")) ){ save(df_comb, file=paste0(input_dir, "df_all.RData"))
-  } else{ save(df_comb, file=paste0(input_dir, "df_all_", sample(1:100, 1) ,".RData")) }
+  } else{ save(df_comb, file=paste0(input_dir, "df_all_", sample(1:100, 1) ,".RData")) ; print('create new') }
 

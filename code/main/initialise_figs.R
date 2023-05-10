@@ -172,7 +172,7 @@ f_importance_ranking <- function(df_in, var_in, var_in_full, value_in, value_in_
   if(length(point_color) > 1){
     g_importance_i <- g_importance_i +
       geom_point( size=4  , aes_string( color = "Category")   ) + #, color="orange") + #  , aes_string( color = "Category")
-      scale_color_manual(name = "Category", values=group.colors) 
+      scale_color_manual(name = "Category", values=point_color ) 
     # scale_color_manual(name = "category", values = c(T2M = "red", TP = 'blue', SSR = 'brown', VPD = 'orange', Other = "dark green") )  +
     # scale_color_manual(name = "type",     values = c(mean = "black", TAC = 'grey50', CV = 'grey10') )  +
   }
