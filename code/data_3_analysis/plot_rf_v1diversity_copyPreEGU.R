@@ -27,13 +27,12 @@ source('/eos/jeodpp/data/projects/FOREST-RESILIENCE/GIT-FOREST-RESILIENCE/FOREST
 script_info       <- 'rf_test_diversity'               # used in output name
 script_info_input      <- script_info               # used in output name
 # input_script_date <- '2023-03-19_diversity1st'           # the 0.05 production with second kndvi version and heterogeneity+diversity data
-# input_script_date <- '2023-04-18' # v1_first_diversityVars                  # EGU GS more diversity dataset
-input_script_date <- '2023-05-03' # v1_first_diversityVars                  # 500 Tree RF
+input_script_date <- '2023-04-18'                   # EGU GS more diversity dataset
 
 # select which analyses to plot
 b_run_performance <- TRUE    # check performance metrics of RF
 b_run_importance  <- TRUE    # create importance ranking for RF variables
-b_run_partialplot <- F    # create partial plots of RF diversity (and other?) variables
+b_run_partialplot <- TRUE    # create partial plots of RF diversity (and other?) variables
 # run and plot dice? honestly the dice takes so long that it is better to run over each variable individuallyand adjust the lims and values as needed
 # - I don't recommend running via the function - just step through the function
 b_run_dice        <- F    # create (actual) derivative of individual conditional expectation (dice) figs for diversity metrics
@@ -175,13 +174,13 @@ f_run_ICE <- function(df_comb_i, rf.model,  var_name_i){ # , lims_h_i = F, lims_
 ###################################################
 
 # load original df as well as train test split
-# load( paste0(input_dir, 'df_all.RData') ) # head(df_comb)
-# load( paste0(input_dir, 'df_comb.test.RData') )
-# load( paste0(input_dir, 'df_comb.train.RData') )
-# summary(df_comb.train) ; colnames(df_comb.train) ; dim(df_comb.train)
-# summary(df_comb.test)  ; colnames(df_comb.test)  ; dim(df_comb.test)
-# dim(df_comb.train) ; dim(df_comb.test) ; print(dim(df_comb.train)[1] / (dim(df_comb.test)[1] + dim(df_comb.train)[1]))
-# dim(df_comb) * c(1,2) == dim(df_comb.train) + dim(df_comb.test)
+load( paste0(input_dir, 'df_all.RData') ) # head(df_comb)
+load( paste0(input_dir, 'df_comb.test.RData') )
+load( paste0(input_dir, 'df_comb.train.RData') )
+summary(df_comb.train) ; colnames(df_comb.train) ; dim(df_comb.train)
+summary(df_comb.test)  ; colnames(df_comb.test)  ; dim(df_comb.test)
+dim(df_comb.train) ; dim(df_comb.test) ; print(dim(df_comb.train)[1] / (dim(df_comb.test)[1] + dim(df_comb.train)[1]))
+dim(df_comb) * c(1,2) == dim(df_comb.train) + dim(df_comb.test)
 
 # only include variables Gio uses for now
 v_target <- 'tac_resid_kndvi'
@@ -195,21 +194,17 @@ v_predictors <- c( 'mu_kndvi',
                    'mu_VPD', 'cv_VPD', 'tac_resid_VPD'
                    # 'mu_spei', 'cv_spei', 'tac_resid_spei' # shouldn't really use this as predictor - use VPD instead
 )
-
 # add biodiversity variables - from first biodiversity look
 # v_optional_predictors <- c( "mu_dissimilarity"  , "skew_avg_diversity" , "kurt_avg_diversity" , "rh50_avg_diversity" ,
 #                             "fhd_avg_diversity" , "rh98_avg_diversity" , "skew_cv_diversity" , "kurt_cv_diversity" , "rh50_cv_diversity" ,  "fhd_cv_diversity")
 
 
 # add biodiversity variables - EGU
-v_optional_predictors <- c( "biomass_dissimilarity_glcmdiversity", "biomass_homogeneity_glcmdiversity" ,
-                            #"EVI_dissimilarity_glcmdiversity"  , "EVI_homogeneity_glcmdiversity",
-                            # "skew_avg_diversity" , "kurt_avg_diversity" , 
-                            "rh50_avg_diversity" ,
+v_optional_predictors <- c( "EVI_dissimilarity_glcmdiversity"  , "EVI_homogeneity_glcmdiversity",
+                            "biomass_dissimilarity_glcmdiversity", "biomass_homogeneity_glcmdiversity" ,
+                            "skew_avg_diversity" , "kurt_avg_diversity" , "rh50_avg_diversity" ,
                             "fhd_avg_diversity" , "rh98_avg_diversity" , "skew_cv_diversity" , 
-                            # "kurt_cv_diversity" , "rh50_cv_diversity" ,  "fhd_cv_diversity",
-                            # "no_diversity",
-                            "kndvi_dissimilarity_glcmdiversity", "kndvi_homogeneity_glcmdiversity")
+                            "kurt_cv_diversity" , "rh50_cv_diversity" ,  "fhd_cv_diversity")
 
 
 ###################################################
@@ -224,28 +219,17 @@ df_partDep_div <- data.frame() # data frame containing partial dependence points
 
 # loop over 'diversity metrics' producing importance figure and adding each to an div importance dataframe
 # for (i in 1:length(v_optional_predictors)){ # i <- 1
-for (i in 1:length(v_optional_predictors)){ # i <- 1
+for (i in 5:length(v_optional_predictors)){ # i <- 1
   var_name_i <- v_optional_predictors[i] # extract individual diversity predictor
   print(var_name_i)
   
   # load rf model
   load(paste0(input_dir, 'rf_model_div-',var_name_i, '.RData' ) ) # rf.model load the rf model for each div variable
-  
-  # load test train all
-  load( paste0(input_dir, 'df_all_div-',var_name_i, '.RData') )        # df_comb_i      head(df_comb_i)
-  load( paste0(input_dir, 'df_comb.test_div-',var_name_i, '.RData') )  # df_comb.test_i
-  load( paste0(input_dir, 'df_comb.train_div-',var_name_i, '.RData') ) # df_comb.train_i
-  # summary(df_comb.train) ; colnames(df_comb.train) ; dim(df_comb.train)
-  # summary(df_comb.test)  ; colnames(df_comb.test)  ; dim(df_comb.test)
-  # dim(df_comb.train) ; dim(df_comb.test) ; print(dim(df_comb.train)[1] / (dim(df_comb.test)[1] + dim(df_comb.train)[1]))
-  # dim(df_comb) * c(1,2) == dim(df_comb.train) + dim(df_comb.test)
-
-  
-  # # initialise train/test df
-  # v_all_vars <- c( v_target, var_name_i, v_predictors) # v_identifiers
-  # df_comb.train_i <- df_comb.train[, v_all_vars]
-  # df_comb.test_i  <- df_comb.test[, v_all_vars]
-  # df_comb_i       <- df_comb[, c(v_identifiers ,v_all_vars) ]       # full original df and X, Y 
+  # initialise train/test df
+  v_all_vars <- c( v_target, var_name_i, v_predictors) # v_identifiers
+  df_comb.train_i <- df_comb.train[, v_all_vars]
+  df_comb.test_i  <- df_comb.test[, v_all_vars]
+  df_comb_i       <- df_comb[, c(v_identifiers ,v_all_vars) ]       # full original df and X, Y 
   
   ###################################################
   ####### IMPORTANCE OF VARIABLES          ##########
@@ -266,7 +250,7 @@ for (i in 1:length(v_optional_predictors)){ # i <- 1
     # head(df_comb_predictVobs) ; summary(df_comb_predictVobs)
     df_comb_predictVobs <- df_comb_predictVobs[complete.cases(df_comb_predictVobs), ]
     
-    g_perf <- f_obs_vs_mod_density(df_comb_predictVobs, s_title = gsub('_', ' ', var_name_i), b_cor = T, b_mse = T, b_rmse = T,  b_mae = T, b_pbias = T  )
+    g_perf <- f_obs_vs_mod_density(df_comb_predictVobs, s_title = var_name_i, b_cor = T, b_mse = T, b_rmse = T,  b_mae = T, b_pbias = T  )
     ggsave(plot = g_perf, filename = paste0(output_path, 'g_obsVSmod_div-', var_name_i, '.png' ) ) # , width = wid, height = hei)
     
   }  # end model performance
@@ -306,7 +290,7 @@ for (i in 1:length(v_optional_predictors)){ # i <- 1
     df_vari_imp_cols <- f_add_category(df_vari_imp_cols, 'Variable')
     
     # create plot ranking the importance of different variables in each RF
-    g_importance_i <- f_importance_ranking(df_vari_imp_cols, 'Variable', 'Variable', 'Importance', '% increase MSE', point_color = group.colors_Gio, c(0,210) )
+    g_importance_i <- f_importance_ranking(df_vari_imp_cols, 'Variable', 'Variable', 'Importance', '% increase MSE', point_color = group.colors_Gio, c(0,100) )
     # plot(g_importance_i)
     ggsave(filename = paste0('g_importance_ranking_', var_name_i ,'.png'), plot = g_importance_i, path = output_path, width = 8, height = 8)
   
@@ -323,7 +307,7 @@ for (i in 1:length(v_optional_predictors)){ # i <- 1
     df_comb.train_i_complete <- df_comb.train_i[complete.cases(df_comb.train_i), ]
     pp_i <- partialPlot(rf.model, df_comb.train_i_complete, names(df_comb.train_i)[2] ) # second name should be the 
     # head(pp_i)
-    pp_i <- as.data.frame(pp_i) ;  pp_i[1:2] <- pp_i[1:2] %>% round( digits = 5)
+    pp_i <- as.data.frame(pp_i) ;  pp_i[1:2] <- pp_i[1:2] %>% round( digits = 3)
     # take the variable name and the stat name
     # pp_i[3] <- strsplit(names(df_comb.train)[i], '_')[[1]][length(strsplit(names(df_comb.train)[i], '_')[[1]])] # names(df_comb.train)[i] ; # variable = final item in name
     # pp_i[4] <- paste( strsplit(names(df_comb.train)[i], '_')[[1]][1: (length(strsplit(names(df_comb.train)[i], '_')[[1]]) - 1) ] , collapse = "_" ) # stat =  the 1st and last-1 terms and put together
@@ -401,7 +385,7 @@ if(b_run_importance){
   # plot the mean importance of each variable across the different models
   g_importance_avg <- f_importance_ranking(df_importance_avg, 'Variable', 'Variable', 'Importance', '% increase MSE', point_color = group.colors_Gio , c(0,60))
   # plot(g_importance_avg)
-  ggsave(filename = paste0( 'g_importance_ranking_mean.png'), plot = g_importance_avg, path = output_path, width = 8, height = 8)
+  ggsave(filename = paste0('g_importance_ranking_mean.png'), plot = g_importance_avg, path = output_path, width = 8, height = 8)
 }
 
 
@@ -416,34 +400,19 @@ if(b_run_partialplot){
   save(df_partDep_div, file=paste0(output_path, 'df_rf_model_partDep.RData' )    )
   
   # set harmonised lims on y-axis (TAC)
-  # lims_pdp <- c(0.28,0.31)
-  lims_pdp <- c(0.27,0.32)
-  lims_pdp <- c(0.16,0.17) ; lims_pdp <- c(0.215,0.222) ;  lims_pdp <- c(0.21,0.214)
-  
+  lims_pdp <- c(0.28,0.31)
   # exclude some that go outside x limits
-  var_group_1 <- c("skew_avg" , "kurt_avg" , "fhd_avg" , "rh98_avg" #, # "rh50_cv" ,  "fhd_cv"
-                  # "EVI_homogeneity_glcmdiversity" #, "biomass_homogeneity_glcmdiversity"
-                   ) ; group_num <- 1
-  var_group_2 <- c('rh50_avg')  ; group_num <- 2 #, #'EVI_homogeneity_glcmdiversity', "biomass_dissimilarity_glcmdiversity"
-                   
+  var_group_1 <- c("skew_avg" , "kurt_avg" , "fhd_avg" , "rh98_avg" , "rh50_cv" ,  "fhd_cv") ; group_num <- 1
+  var_group_2 <- c('rh50_avg', 'mu_dissimilarity') ; group_num <- 2
   var_group_3 <- c('skew_cv', 'kurt_cv') ; group_num <- 3
-  var_group_4 <- c('EVI_homogeneity_glcmdiversity', 'EVI_dissimilarity_glcmdiversity') ; group_num <- 4
-  var_group_5 <- c('biomass_homogeneity_glcmdiversity', 'biomass_dissimilarity_glcmdiversity') ; group_num <- 5
-  var_group_6 <- c('kndvi_homogeneity_glcmdiversity', 'kndvi_dissimilarity_glcmdiversity') ; group_num <- 6
-  
-  var_group_7 <- c('rh50_avg') ; group_num <- 'rh50_avg' ;  lims_pdp <- c(0.28,0.31) 
-  var_group_8 <- c('biomass_dissimilarity_glcmdiversity') ; group_num <- 'biomass_dissimilarity' ;  lims_pdp <- c(0.16,0.17) 
   # var_group_3 <- c('kurt_avg', )
-  df_partDep_div_plot <- df_partDep_div  %>% filter(  variable %in%  var_group_8 ) #  %>% filter(  !variable %in%  var_group_2 ) # exclude with !
+  df_partDep_div_plot <- df_partDep_div  %>% filter(  variable %in%  var_group_2 ) #  %>% filter(  !variable %in%  var_group_2 ) # exclude with !
   ggp <- ggplot( df_partDep_div_plot , aes(value, TAC, color = variable)) +    # Draw ggplot2 plot with one axis
     geom_line( size = 1) +
-    xlab('Biomass dissimiliarity') + #xlab('Diversity metric') + # xlab('Median height') +
-    ylab('Temporal autocorrelation') +
+    xlab('Diversity metric') +
     ylim( lims_pdp ) +
     # scale_color_manual(values=group.colors) +
-    basic_graph_theme + 
-    theme(legend.position="none") # theme(legend.position="bottom")
-  ggp
+    basic_graph_theme
   ggsave(filename = paste0('g_partDep_diversityMetric_', group_num ,'.png'), plot = ggp, path = output_path, width = 8, height = 8)
 }
 

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+##############################################
+## rescale a netCDF file to lower resolution                                                                        
+##############################################
+# algorithm description
+# 1) set working directories
+# 2) check if ouput directories exist if not create them
+# 3) rescale data
+
+# 1) set working directories
+in_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/biodiversity/earthenv/homogeneity_nc/"
+in_dir_grid="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/biodiversity/earthenv/scripts/targetgrid/"
+out_dir="/eos/jeodpp/data/projects/FOREST-RESILIENCE/data/biodiversity/earthenv/homogeneity_nc_005/"
+in_file="Homogeneity_01_05_5km_uint16_europe_rescaled.nc"
+in_grid="targetgrid_005.txt"
+out_file="Homogeneity_01_05_5km_uint16_europe_rescaled_005.nc"
+
+# 2) check if ouput directory exists if not create it
+if [ ! -d ${out_dir} ]; then
+  mkdir ${out_dir}
+  fi
+
+# 2) rescale data
+cdo remapnn,${in_dir_grid}${in_grid} ${in_dir}${in_file} ${out_dir}${out_file}
+
+
